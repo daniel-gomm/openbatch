@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=75.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OpenAIBatch"
+version = "0.0.1"
+authors = [
+    { name="Daniel Gomm", email="daniel.gomm@cwi.nl" },
+]
+description = "Create batch jobs for the OpenAI API with ease."
+readme = "README.md"
+requires-python = ">=3.5"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pydantic~=2.11.9"
+]
+
+[project.urls]
+Homepage = "https://github.com/daniel-gomm/OpenAIBatchJobBuilder"
+Issues = "https://github.com/daniel-gomm/OpenAIBatchJobBuilder/issues"
