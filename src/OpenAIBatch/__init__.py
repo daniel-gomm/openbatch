@@ -1,3 +1,2 @@
-from OpenAIBatch.builder import BatchJobBuilder
+from OpenAIBatch.manager import BatchJobManager
 from OpenAIBatch.collector import RequestCollector
-from OpenAIBatch.model import Message, PromptTemplate, ReusablePrompt, InputInstance

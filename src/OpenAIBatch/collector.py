@@ -1,36 +1,63 @@
-import os
-import json
+from os import PathLike
+from typing import Union, Optional
+
+from pydantic import BaseModel
+
+from OpenAIBatch.manager import BatchJobManager
+from OpenAIBatch.model import ResponsesAPIStrategy, ChatCompletionsAPIStrategy, ResponsesRequest, CompletionsRequest, \
+    EmbeddingsRequest, EmbeddingsAPIStrategy
 
 
 class Responses:
 
-    def __init__(self):
-        self.cached_requests = []
+    def __init__(self, batch_file_path: Union[str, PathLike]):
+        self.batch_file_path = batch_file_path
+        self.batch_manager = BatchJobManager()
+
+    def parse(self, custom_id: str, model: str, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
+        request = ResponsesRequest.model_validate({"model": model, **kwargs})
+        if text_format is not None:
+            request.set_output_structure(text_format)
+        self._add_request(custom_id, request)
 
     def create(self, custom_id: str, model: str, **kwargs) -> None:
-        self.cached_requests.append({
-            "custom_id": custom_id,
-            "method": "POST",
-            "url": "/v1/responses",
-            "body": {"model": model, **kwargs}
-        })
+        request = ResponsesRequest.model_validate({"model": model, **kwargs})
+        self._add_request(custom_id, request)
 
-    def _reset_cache(self):
-        self.cached_requests = []
+    def _add_request(self, custom_id: str, request: ResponsesRequest) -> None:
+        self.batch_manager.add(custom_id, request, self.batch_file_path, ResponsesAPIStrategy())
+
+class Completions:
+    def __init__(self, batch_file_path: Union[str, PathLike]):
+        self.batch_file_path = batch_file_path
+        self.batch_manager = BatchJobManager()
+
+    def parse(self, custom_id: str, model: str, response_format: Optional[type[BaseModel]] = None, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
+        request = CompletionsRequest.model_validate({"model": model, **kwargs})
+        if response_format is not None:
+            request.set_output_structure(text_format)
+        self._add_request(custom_id, request)
+
+    def create(self, custom_id: str, model: str, **kwargs) -> None:
+        request = CompletionsRequest.model_validate({"model": model, **kwargs})
+        self._add_request(custom_id, request)
+
+    def _add_request(self, custom_id: str, request: CompletionsRequest) -> None:
+        self.batch_manager.add(custom_id, request, self.batch_file_path, ChatCompletionsAPIStrategy())
+
+class Embeddings:
+    def __init__(self, batch_file_path: Union[str, PathLike]):
+        self.batch_file_path = batch_file_path
+        self.batch_manager = BatchJobManager()
+
+    def create(self, custom_id: str, model: str, input: Union[str, list[str]], **kwargs) -> None:
+        request = EmbeddingsRequest.model_validate({"model": model, "input": input, **kwargs})
+        self.batch_manager.add(custom_id, request, self.batch_file_path, EmbeddingsAPIStrategy())
 
 
 class RequestCollector:
-    def __init__(self):
-        self.responses = Responses()
-
-    def collect_requests_to_file(self, file_path: str, reset_caches: bool = False) -> None:
-        os.makedirs(file_path, exist_ok=True)
-        with open(file_path, 'w') as f:
-            for request in self.responses.cached_requests:
-                f.write(json.dumps(request) + '\n')
-
-        if reset_caches:
-            self.reset_collected_requests()
-
-    def reset_collected_requests(self) -> None:
-        self.responses = Responses()
+    def __init__(self, batch_file_path: Union[str, PathLike]):
+        self.responses = Responses(batch_file_path)
+        self.chat = ()
+        self.chat.completions = Completions(batch_file_path)
+        self.embeddings = Embeddings(batch_file_path)
