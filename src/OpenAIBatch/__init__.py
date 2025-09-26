@@ -1,2 +1,2 @@
 from OpenAIBatch.manager import BatchJobManager
-from OpenAIBatch.collector import RequestCollector
+from OpenAIBatch.collector import BatchCollector

@@ -11,17 +11,46 @@ T = TypeVar("T", bound=BaseModel)
 
 @dataclass
 class Message:
+    """
+    Represents a single message in a conversation or prompt.
+
+    Attributes:
+        role (str): The role of the message sender (e.g., "user", "assistant", "system").
+        content (str): The text content of the message.
+    """
     role: str
     content: str
 
     def serialize(self):
+        """
+        Converts the Message instance into a dictionary suitable for API requests.
+
+        Returns:
+            Dict[str, str]: A dictionary with 'role' and 'content' keys.
+        """
         return {"role": self.role, "content": self.content}
 
 @dataclass
 class PromptTemplate:
+    """
+    A template containing a sequence of messages, where the content can contain
+    placeholders for string formatting.
+
+    Attributes:
+        messages (List[Message]): A list of Message objects that form the template.
+    """
     messages: List[Message]
 
     def format(self, **kwargs) -> List[Message]:
+        """
+        Formats the content of each message in the template using the provided keyword arguments.
+
+        Args:
+            **kwargs: Keyword arguments used to substitute placeholders in message content.
+
+        Returns:
+            List[Message]: A new list of Message objects with formatted content.
+        """
         formatted_messages = []
         for message in self.messages:
             formatted_content = message.content.format(**kwargs)
@@ -29,34 +58,108 @@ class PromptTemplate:
         return formatted_messages
 
 class ReusablePrompt(BaseModel):
+    """
+    References a reusable prompt template and its associated variables.
+
+    Attributes:
+        id (str): The unique identifier of the reusable prompt template.
+        version (str): The specific version of the prompt template to use.
+        variables (Dict[str, Any]): A dictionary of variable names and their values
+                                     to be used when formatting the prompt.
+    """
     id: str
     version: str
     variables: Dict[str, Any]
 
 class ReasoningConfig(BaseModel):
+    """
+    Configuration options for reasoning models.
+
+    Attributes:
+       effort (Literal["minimal", "low", "medium", "high"]): Constrains effort on reasoning
+           for reasoning models. Defaults to "medium".
+       summary (Optional[Literal["auto", "concise", "detailed"]]): A summary of the
+           reasoning performed by the model. Optional.
+    """
     effort: Literal["minimal", "low", "medium", "high"] = Field(default="medium", description="Constrains effort on reasoning for reasoning models.")
     summary: Optional[Literal["auto", "concise", "detailed"]] = Field(None, description="A summary of the reasoning performed by the model.")
 
 class InputInstance(BaseModel):
+    """
+    Base class for defining a single input instance for a batch job.
+
+    Attributes:
+        id (str): Unique identifier of the input instance.
+        instance_request_options (Optional[Dict[str, Any]]): Options specific to the
+            input instance that can be set in the API request. Optional.
+    """
     id: str = Field(description="Unique identifier of the input instance.")
     instance_request_options: Optional[Dict[str, Any]] = Field(None, description="Options specific to the input instance that to set in the request.")
 
 class MessagesInputInstance(InputInstance):
+    """
+    An input instance defined by a list of messages.
+
+    Attributes:
+        id (str): Unique identifier of the input instance.
+        messages (List[Message]): List of messages to be sent to the model for this instance.
+        instance_request_options (Optional[Dict[str, Any]]): Options specific to the
+            input instance that can be set in the API request. Optional.
+    """
     messages: List[Message] = Field(description="List of messages to be sent to the model.")
 
 class PromptTemplateInputInstance(InputInstance):
+    """
+    An input instance defined by mapping values to variables in a prompt template.
+
+    Attributes:
+        id (str): Unique identifier of the input instance.
+        prompt_value_mapping (Dict[str, str]): Mapping of prompt variable names
+            to their values for this instance.
+        instance_request_options (Optional[Dict[str, Any]]): Options specific to the
+            input instance that can be set in the API request. Optional.
+    """
     prompt_value_mapping: Dict[str, str] = Field(description="Mapping of prompt variable names to their values.")
 
 class EmbeddingInputInstance(InputInstance):
+    """
+    An input instance specifically for embedding requests.
+
+    Attributes:
+        id (str): Unique identifier of the input instance.
+        input (Union[str, List[str]]): The text or list of texts to be embedded for this instance.
+        instance_request_options (Optional[Dict[str, Any]]): Options specific to the
+            input instance that can be set in the API request. Optional.
+    """
     input: Union[str, List[str]] = Field(description="Text(s) to be embedded.")
 
 class RequestStrategy(ABC):
+    """
+    Abstract base class defining the strategy for creating a request
+    for a specific API endpoint.
+    """
     @property
     @abstractmethod
     def url(self) -> str:
+        """
+        Abstract property for the specific API endpoint URL path.
+
+        Returns:
+            str: The URL path for the API.
+        """
         pass
 
     def create_request(self, custom_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Creates a structured request dictionary for a batch job.
+
+        Args:
+            custom_id (str): A unique identifier for the request.
+            body (Dict[str, Any]): The API-specific request body content.
+
+        Returns:
+            Dict[str, Any]: A dictionary representing the complete request structure.
+        """
         return {
             "custom_id": custom_id,
             "method": "POST",
@@ -65,32 +168,59 @@ class RequestStrategy(ABC):
         }
 
 class ResponsesAPIStrategy(RequestStrategy):
-    """Strategy for the /v1/responses endpoint."""
+    """Strategy for creating requests to the /v1/responses endpoint."""
     @property
     def url(self) -> str:
         return "/v1/responses"
 
 class ChatCompletionsAPIStrategy(RequestStrategy):
-    """Strategy for the /v1/chat/completions endpoint."""
+    """Strategy for creating requests to the /v1/chat/completions endpoint."""
     @property
     def url(self) -> str:
         return "/v1/chat/completions"
 
 class EmbeddingsAPIStrategy(RequestStrategy):
-    """Strategy for the /v1/embeddings endpoint."""
+    """Strategy for creating requests to the /v1/embeddings endpoint."""
     @property
     def url(self) -> str:
         return "/v1/embeddings"
 
 class BaseRequest(BaseModel, ABC):
-    """Base class for API-specific job configurations."""
+    """
+    Abstract base class for API-specific request configurations (job configurations).
+
+    Attributes:
+        model (str): Model ID used to generate the response, like "gpt-4.1". Defaults to "gpt-4.1".
+    """
     model: str = Field("gpt-4.1", description="Model ID used to generate the response, like gpt-4o or o3.")
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Converts the request configuration object to a dictionary, excluding fields that are None.
+
+        Returns:
+            Dict[str, Any]: The configuration as a dictionary.
+        """
         return self.model_dump(exclude_none=True)
 
+class TextGenerationRequest(BaseRequest, ABC):
+    """
+    Abstract base class for text generation requests, including common parameters
+    for various text generation endpoints.
 
-class TestGenerationRequest(BaseRequest, ABC):
+    Attributes:
+        model (str): Model ID used to generate the response, like "gpt-4.1". Defaults to "gpt-4.1".
+        tools (Optional[List[object]]): An array of tools the model may call.
+        top_p (Optional[float]): An alternative to sampling with temperature (nucleus sampling).
+        parallel_tool_calls (Optional[bool]): Whether to allow parallel tool calls.
+        prompt_cache_key (Optional[str]): Used by OpenAI to cache responses.
+        safety_identifier (Optional[str]): A stable identifier for policy monitoring.
+        service_tier (Optional[Literal["auto", "default", "flex", "priority"]]): Specifies the processing type.
+        store (Optional[bool]): Whether to store the generated model response.
+        temperature (Optional[float]): Sampling temperature to use (0 to 2).
+        tool_choice (Optional[str | object]): How the model should select which tool to use.
+        top_logprobs (Optional[int]): Number of most likely tokens to return at each position (0 to 20).
+    """
     tools: Optional[List[object]] = Field(None, description="An array of tools the model may call while generating a response.")
     top_p: Optional[float] = Field(None, ge=0, le=1, description="An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass.")
     parallel_tool_calls: Optional[bool] = Field(None, description="Whether to allow the model to run tool calls in parallel.")
@@ -112,7 +242,34 @@ class TestGenerationRequest(BaseRequest, ABC):
         pass
 
 
-class ResponsesRequest(TestGenerationRequest):
+class ResponsesRequest(TextGenerationRequest):
+    """
+        Configuration for a /v1/responses API request.
+
+        Attributes:
+            model (str): Model ID used to generate the response, like "gpt-4.1". Defaults to "gpt-4.1".
+            conversation (Optional[str]): The conversation this response belongs to.
+            include (Optional[List[Literal[...]]]): Specify additional output data to include.
+            input (Optional[str | List[Dict[str, str]]]): Text, image, or file inputs to the model.
+            instructions (Optional[str]): A system or developer message.
+            max_output_tokens (Optional[int]): Upper bound for generated tokens.
+            max_tool_calls (Optional[int]): Maximum number of tool calls allowed.
+            previous_response_id (Optional[str]): ID of the previous response for multi-turn.
+            prompt (Optional[ReusablePrompt]): Reference to a prompt template and its variables.
+            reasoning (Optional[ReasoningConfig]): Configuration for reasoning models.
+            text (Optional[object]): Configuration options for a text response from the model (e.g., JSON schema).
+            truncation (Optional[Literal["auto", "disabled"]]): The truncation strategy to use.
+            tools (Optional[List[object]]): An array of tools the model may call.
+            top_p (Optional[float]): An alternative to sampling with temperature (nucleus sampling).
+            parallel_tool_calls (Optional[bool]): Whether to allow parallel tool calls.
+            prompt_cache_key (Optional[str]): Used by OpenAI to cache responses.
+            safety_identifier (Optional[str]): A stable identifier for policy monitoring.
+            service_tier (Optional[Literal["auto", "default", "flex", "priority"]]): Specifies the processing type.
+            store (Optional[bool]): Whether to store the generated model response.
+            temperature (Optional[float]): Sampling temperature to use (0 to 2).
+            tool_choice (Optional[str | object]): How the model should select which tool to use.
+            top_logprobs (Optional[int]): Number of most likely tokens to return at each position (0 to 20).
+        """
     conversation: Optional[str] = Field(None, description="The conversation that this response belongs to.")
     include: Optional[List[Literal["code_interpreter_call.outputs", "computer_call_output.output.image_url", "file_search_call.results", "message.input_image.image_url", "message.output_text.logprobs", "reasoning.encrypted_content"]]] = Field(None, description="Specify additional output data to include in the model response.")
     input: Optional[str | List[Dict[str, str]]] = Field(None, description="Text, image, or file inputs to the model, used to generate a response.")
@@ -139,8 +296,37 @@ class ResponsesRequest(TestGenerationRequest):
             }
         }
 
-class CompletionsRequest(TestGenerationRequest):
-    messages: List[Dict[str, str]] = None
+class ChatCompletionsRequest(TextGenerationRequest):
+    """
+    Configuration for a /v1/chat/completions API request.
+
+    Attributes:
+        model (str): Model ID used to generate the response, like "gpt-4.1". Defaults to "gpt-4.1".
+        messages (List[Dict[str, str]]): A list of messages in the conversation.
+        frequency_penalty (Optional[float]): Penalizes new tokens based on frequency (-2.0 to 2.0).
+        logit_bias (Optional[Dict]): Modifies the likelihood of specified tokens.
+        logprobs (Optional[bool]): Whether to return log probabilities.
+        max_completion_tokens (Optional[int]): Upper bound for generated completion tokens.
+        modalities (Optional[List[str]]): Output types the model should generate.
+        n (Optional[int]): How many chat completion choices to generate.
+        prediction (Optional[object]): Configuration for a Predicted Output.
+        presence_penalty (Optional[float]): Penalizes new tokens based on presence (-2.0 to 2.0).
+        reasoning_effort (Optional[Literal["minimal", "low", "medium", "high"]]): Constrains reasoning effort.
+        response_format (Optional[Dict]): Specifies the format that the model must output (e.g., JSON schema).
+        verbosity (Optional[Literal["low", "medium", "high"]]): Constrains the response verbosity.
+        web_search_options (Optional[object]): Configuration for the web search tool.
+        tools (Optional[List[object]]): An array of tools the model may call.
+        top_p (Optional[float]): An alternative to sampling with temperature (nucleus sampling).
+        parallel_tool_calls (Optional[bool]): Whether to allow parallel tool calls.
+        prompt_cache_key (Optional[str]): Used by OpenAI to cache responses.
+        safety_identifier (Optional[str]): A stable identifier for policy monitoring.
+        service_tier (Optional[Literal["auto", "default", "flex", "priority"]]): Specifies the processing type.
+        store (Optional[bool]): Whether to store the generated model response.
+        temperature (Optional[float]): Sampling temperature to use (0 to 2).
+        tool_choice (Optional[str | object]): How the model should select which tool to use.
+        top_logprobs (Optional[int]): Number of most likely tokens to return at each position (0 to 20).
+    """
+    messages: List[Dict[str, str]] = Field(None, description="A list of messages comprising the conversation so far.")
     frequency_penalty: Optional[float] = Field(None, ge=-2, le=2, description="Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.")
     logit_bias: Optional[Dict] = Field(None, description="Modify the likelihood of specified tokens appearing in the completion.")
     logprobs: Optional[bool] = Field(None, description="Whether to return log probabilities of the output tokens or not.")
@@ -169,7 +355,17 @@ class CompletionsRequest(TestGenerationRequest):
         }
 
 class EmbeddingsRequest(BaseRequest):
-    input: Union[str | List[str]]
+    """
+    Configuration for a /v1/embeddings API request.
+
+    Attributes:
+        model (str): Model ID used to generate the response, like "text-embedding-3-small".
+        input (Union[str | List[str]]): Input text or array of tokens to embed.
+        dimensions (Optional[int]): The desired number of dimensions for the resulting embeddings.
+        encoding_format (Optional[Literal["base64", "float"]]): The format to return the embeddings in.
+        user (Optional[str]): A unique identifier representing the end-user.
+    """
+    input: Union[str | List[str]] = Field(None, description="Input text to embed, encoded as a string or array of tokens.")
     dimensions: Optional[int] = Field(None, ge=1, description="The number of dimensions the resulting output embeddings should have. Only supported in text-embedding-3 and later models.")
     encoding_format: Optional[Literal["base64", "float"]] = Field(None, description="The format to return the embeddings in. Can be either float or base64.")
     user: Optional[str] = Field(None, description="A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. ")
