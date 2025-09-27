@@ -4,8 +4,8 @@ from typing import Union, Optional
 
 from pydantic import BaseModel
 
-from OpenAIBatch.manager import BatchJobManager
-from OpenAIBatch.model import ResponsesRequest, ChatCompletionsRequest, EmbeddingsRequest
+from openbatch.manager import BatchJobManager
+from openbatch.model import ResponsesRequest, ChatCompletionsRequest, EmbeddingsRequest
 
 
 class Responses:
@@ -25,7 +25,6 @@ class Responses:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
-        self.batch_manager = BatchJobManager()
 
     def parse(self, custom_id: str, model: str, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
@@ -57,7 +56,7 @@ class Responses:
         self._add_request(custom_id, request)
 
     def _add_request(self, custom_id: str, request: ResponsesRequest) -> None:
-        self.batch_manager.add(custom_id, request, self.batch_file_path)
+        BatchJobManager.add(custom_id, request, self.batch_file_path)
 
 class ChatCompletions:
     """
@@ -75,15 +74,11 @@ class ChatCompletions:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
-        self.batch_manager = BatchJobManager()
 
     def parse(self, custom_id: str, model: str, response_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
         Creates a ChatCompletionsRequest, optionally enforcing a JSON output structure,
         and adds it to the batch file. Use it like the OpenAI().chat.completions.parse() method.
-
-        Note: The `response_format` and `text_format` parameters appear redundant
-        in the provided code snippet. Only one is used to call `set_output_structure`.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -110,7 +105,7 @@ class ChatCompletions:
         self._add_request(custom_id, request)
 
     def _add_request(self, custom_id: str, request: ChatCompletionsRequest) -> None:
-        self.batch_manager.add(custom_id, request, self.batch_file_path)
+        BatchJobManager.add(custom_id, request, self.batch_file_path)
 
 class Embeddings:
     """
@@ -128,7 +123,6 @@ class Embeddings:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
-        self.batch_manager = BatchJobManager()
 
     def create(self, custom_id: str, model: str, inp: Union[str, list[str]], **kwargs) -> None:
         """
@@ -141,7 +135,7 @@ class Embeddings:
             **kwargs: Additional parameters for the EmbeddingsRequest.
         """
         request = EmbeddingsRequest.model_validate({"model": model, "input": inp, **kwargs})
-        self.batch_manager.add(custom_id, request, self.batch_file_path)
+        BatchJobManager.add(custom_id, request, self.batch_file_path)
 
 
 class BatchCollector:

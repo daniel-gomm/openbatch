@@ -115,6 +115,3 @@ def type_to_json_schema(output_type: type[T]) -> Dict[str, Any]:
     json_schema = output_type.model_json_schema()
     schema = _ensure_strict_json_schema(json_schema, path=(), root=json_schema)
     return schema
-
-
-

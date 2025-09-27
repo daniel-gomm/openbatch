@@ -1,16 +1,14 @@
 from abc import abstractmethod, ABC
-from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Literal, TypeVar, Union
 
 from pydantic import BaseModel, Field
 
-from OpenAIBatch._utils import type_to_json_schema
+from openbatch._utils import type_to_json_schema
 
 
 T = TypeVar("T", bound=BaseModel)
 
-@dataclass
-class Message:
+class Message(BaseModel):
     """
     Represents a single message in a conversation or prompt.
 
@@ -30,8 +28,7 @@ class Message:
         """
         return {"role": self.role, "content": self.content}
 
-@dataclass
-class PromptTemplate:
+class PromptTemplate(BaseModel):
     """
     A template containing a sequence of messages, where the content can contain
     placeholders for string formatting.
