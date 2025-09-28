@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openbatch"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
     { name="Daniel Gomm", email="daniel.gomm@cwi.nl" },
 ]
@@ -20,5 +20,6 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/daniel-gomm/OpenAIBatchJobBuilder"
-Issues = "https://github.com/daniel-gomm/OpenAIBatchJobBuilder/issues"
+Homepage = "https://github.com/daniel-gomm/openbatch"
+Issues = "https://github.com/daniel-gomm/openbatch/issues"
+Documentation = "https://daniel-gomm.github.io/openbatch/"
