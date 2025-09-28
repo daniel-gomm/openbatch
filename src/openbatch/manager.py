@@ -19,7 +19,7 @@ class BatchJobManager:
     prompt templates, common request configurations, and input instances.
     """
 
-    def add_templated_instances(self, prompt: PromptTemplate | ReusablePrompt,
+    def add_templated_instances(self, prompt: Union[PromptTemplate, ReusablePrompt],
                                 common_request: R, input_instances: Iterable[PromptTemplateInputInstance],
                                 save_file_path: str | Path) -> None:
         """
@@ -30,9 +30,9 @@ class BatchJobManager:
        to the batch file.
 
        Args:
-           prompt (PromptTemplate | ReusablePrompt): The prompt definition, either
+           prompt (Union[PromptTemplate, ReusablePrompt]): The prompt definition, either
                an in-memory template or a reference to a reusable prompt.
-           common_request (R): The base request configuration (e.g., model, temperature).
+           common_request (Union[ResponsesRequest, ChatCompletionsRequest]): The base request configuration (e.g., model, temperature).
                Must be a TextGenerationRequest subclass (ResponsesRequest or ChatCompletionsRequest).
            input_instances (Iterable[PromptTemplateInputInstance]): An iterable of
                instances containing prompt variable mappings and instance options.
@@ -94,7 +94,7 @@ class BatchJobManager:
 
         Args:
             custom_id (str): A unique identifier for this specific request in the batch.
-            request (B): The API-specific request configuration object.
+            request (Union[ResponsesRequest, ChatCompletionsRequest, EmbeddingsRequest]): The API-specific request configuration object.
             save_file_path (Union[str, Path]): The path to the batch job request file (JSONL format).
 
         Raises:

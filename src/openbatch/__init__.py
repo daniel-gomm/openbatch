@@ -9,6 +9,7 @@ from openbatch.model import (
     ResponsesRequest,
     ChatCompletionsRequest,
     EmbeddingsRequest,
+    ReasoningConfig,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "ResponsesRequest",
     "ChatCompletionsRequest",
     "EmbeddingsRequest",
+    "ReasoningConfig",
 ]

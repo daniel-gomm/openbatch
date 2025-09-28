@@ -29,7 +29,7 @@ class Responses:
     def parse(self, custom_id: str, model: str, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
         Creates a ResponsesRequest, optionally enforcing a JSON output structure,
-        and adds it to the batch file. Use it like the OpenAI().responses.parse() method.
+        and adds it to the batch file. Use it like the `OpenAI().responses.parse()` method.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -45,7 +45,7 @@ class Responses:
 
     def create(self, custom_id: str, model: str, **kwargs) -> None:
         """
-        Creates a standard ResponsesRequest and adds it to the batch file. Use it like the OpenAI().responses.create() method.
+        Creates a standard ResponsesRequest and adds it to the batch file. Use it like the `OpenAI().responses.create()` method.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -78,7 +78,7 @@ class ChatCompletions:
     def parse(self, custom_id: str, model: str, response_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
         Creates a ChatCompletionsRequest, optionally enforcing a JSON output structure,
-        and adds it to the batch file. Use it like the OpenAI().chat.completions.parse() method.
+        and adds it to the batch file. Use it like the `OpenAI().chat.completions.parse()` method.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -94,7 +94,7 @@ class ChatCompletions:
 
     def create(self, custom_id: str, model: str, **kwargs) -> None:
         """
-        Creates a standard ChatCompletionsRequest and adds it to the batch file. Use it like the OpenAI().chat.completions.create() method.
+        Creates a standard ChatCompletionsRequest and adds it to the batch file. Use it like the `OpenAI().chat.completions.create()` method.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -126,7 +126,7 @@ class Embeddings:
 
     def create(self, custom_id: str, model: str, inp: Union[str, list[str]], **kwargs) -> None:
         """
-        Creates an EmbeddingsRequest and adds it to the batch file. Use it like the OpenAI().embeddings.create() method.
+        Creates an EmbeddingsRequest and adds it to the batch file. Use it like the `OpenAI().embeddings.create()` method.
 
         Args:
             custom_id (str): A unique ID for the request in the batch file.
@@ -139,6 +139,24 @@ class Embeddings:
 
 
 class BatchCollector:
+    """
+    A high-level utility class for creating OpenAI batch job files.
+
+    This class provides a convenient and familiar interface, mimicking the structure
+    of the official OpenAI Python client (e.g., `openai.chat.completions.create`).
+    It's designed for adding individual API requests to a JSONL file one by one,
+    making it ideal for simple or ad-hoc batch creation tasks.
+
+    After initialization, requests can be added via the following attributes:
+    - `collector.responses`: For `/v1/responses` endpoint requests.
+    - `collector.chat.completions`: For `/v1/chat/completions` endpoint requests.
+    - `collector.embeddings`: For `/v1/embeddings` endpoint requests.
+
+    Args:
+        batch_file_path (Union[str, PathLike]): The path to the JSONL file
+            where the batch requests will be written. The file will be created
+            if it doesn't exist and appended to if it does.
+    """
     def __init__(self, batch_file_path: Union[str, PathLike]):
         self.responses = Responses(batch_file_path)
         self.chat = SimpleNamespace()
