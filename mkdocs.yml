@@ -1,0 +1,16 @@
+site_name: OpenBatch Docs
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings
+
+nav:
+  - index.md
+  - Getting Started: getting_started.md
+  - Reference:
+      - BatchJobManager: reference/batch_job_manager.md
+      - BatchJobCollector: reference/batch_job_collector.md
+      - Requests: reference/requests.md
+      - Model: reference/model.md
