@@ -41,6 +41,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install mkdocs mkdocs-material "mkdocstrings[python]"
+          pip install .  # Install the documented openbatch package
 
       - name: Build MkDocs site
         run: mkdocs build --clean
