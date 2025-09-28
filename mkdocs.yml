@@ -1,7 +1,26 @@
 site_name: OpenBatch Docs
-
+site_url: https://www.daniel-gomm.github.io/openbatch
+repo_url: https://github.com/daniel-gomm/openbatch
 theme:
   name: "material"
+  icon:
+    repo: fontawesome/brands/git-alt
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: blue
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
 
 plugins:
   - mkdocstrings
