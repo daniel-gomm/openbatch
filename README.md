@@ -35,7 +35,7 @@ class LogicalAnalysis(BaseModel):
     is_valid: bool = Field(description="Whether the conclusion logically follows from the premise.")
 
 # 1. Initialize the collector with the desired output file path
-BATCH_FILE = "my_api_batch.jsonl"
+BATCH_FILE = "responses_api_batch.jsonl"
 collector = BatchCollector(batch_file_path=BATCH_FILE)
 
 # 2. Add a standard request to the Responses API
@@ -58,8 +58,12 @@ collector.responses.parse(
     reasoning=ReasoningConfig(effort="high") # Configure the reasoning effort
 )
 
-# 4. Add an Embedding request to showcase API breadth
-collector.embeddings.create(
+# We need to create a separate collector for embeddings since the batch API requires one request type per file
+EMBEDDINGS_BATCH_FILE = "embeddings_api_batch.jsonl"
+embeddings_collector = BatchCollector(batch_file_path=EMBEDDINGS_BATCH_FILE)
+
+# 4. Add an Embedding request
+embeddings_collector.embeddings.create(
     custom_id="request-3-embedding",
     model="text-embedding-3-small",
     inp="OpenBatch simplifies creating batch jobs."
