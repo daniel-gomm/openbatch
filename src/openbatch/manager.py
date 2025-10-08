@@ -1,4 +1,5 @@
 import json
+import warnings
 from copy import deepcopy
 from pathlib import Path
 from typing import TypeVar, Iterable, Union
@@ -21,7 +22,7 @@ class BatchJobManager:
 
     def add_templated_instances(self, prompt: Union[PromptTemplate, ReusablePrompt],
                                 common_request: R, input_instances: Iterable[PromptTemplateInputInstance],
-                                save_file_path: str | Path) -> None:
+                                save_file_path: str | Path, suppress_warnings: bool = False) -> None:
         """
        Adds multiple templated input instances to a batch request file.
 
@@ -37,6 +38,7 @@ class BatchJobManager:
            input_instances (Iterable[PromptTemplateInputInstance]): An iterable of
                instances containing prompt variable mappings and instance options.
            save_file_path (str | Path): The path to the batch job request file (JSONL format).
+           suppress_warnings (bool): Whether to suppress warnings about appending to an existing file.
 
        Raises:
            ValueError: If `common_request` is an `EmbeddingsRequest` or any other
@@ -49,6 +51,9 @@ class BatchJobManager:
 
         save_file_path = Path(save_file_path)
         save_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if save_file_path.exists() and not suppress_warnings:
+            warnings.warn(f"File {save_file_path} already exists. New contents are appended to the file. Make sure that this is intended behavior.", category=RuntimeWarning)
 
         for instance in input_instances:
             request = deepcopy(common_request)
