@@ -1,5 +1,7 @@
 from abc import abstractmethod, ABC
-from typing import List, Dict, Any, Optional, Literal, TypeVar, Union
+from os import PathLike
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Literal, TypeVar, Union, Self
 
 from pydantic import BaseModel, Field
 
@@ -369,3 +371,35 @@ class EmbeddingsRequest(BaseRequest):
 
     def set_input(self, inp: Union[str | List[str]]) -> None:
         self.input = inp
+
+class RequestTemplate(BaseModel):
+    """
+    A template defining a batch job, including its name, description,
+    prompt configuration, and request configuration.
+
+    Attributes:
+        name (str): The name of the request template.
+        description (str): A brief description of the request template.
+        prompt (Union[PromptTemplate, ReusablePrompt]): The prompt configuration, either as a
+            direct template or a reference to a reusable prompt.
+        request (BaseRequest): The API-specific request configuration (e.g., ResponsesRequest).
+        metadata (Optional[Dict[Any, Any]]): Optional metadata associated with the request template.
+    """
+    name: str
+    description: str
+    prompt: Union[PromptTemplate, ReusablePrompt]
+    request: BaseRequest
+    metadata: Optional[Dict[Any, Any]] = None
+
+    def save(self, path: PathLike) -> None:
+        if not str(path).endswith(".json"):
+            raise ValueError("RequestTemplate has to be saves as \".json\" file.")
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+        with open(path, 'w+') as f:
+            f.write(self.model_dump_json(indent=4))
+
+    @classmethod
+    def load(cls, path: PathLike) -> Self:
+        with open(path, 'r') as f:
+            return RequestTemplate.model_validate_json(f.read())
