@@ -2,7 +2,7 @@
 
 [](https://www.google.com/search?q=https://badge.fury.io/py/openbatch) **OpenBatch** is a lightweight Python utility designed to streamline the creation of JSONL files for the [OpenAI Batch API](https://platform.openai.com/docs/guides/batch). It provides a type-safe and intuitive interface using Pydantic models to construct requests for the `/v1/responses`, `/v1/chat/completions`, and `/v1/embeddings` endpoints.
 
-For a detailed guide on using OpenBatch, please refer to the **[OpenBatch Documentation](https://danie-gomm.github.io/openbatch)**.
+For a detailed guide on using OpenBatch, please refer to the **[OpenBatch Documentation](https://openbatch.daniel-gomm.com/)**.
 
 The library offers two distinct APIs to fit your workflow:
 
