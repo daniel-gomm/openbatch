@@ -1,7 +1,6 @@
 import json
 import pytest
 import warnings
-from pathlib import Path
 from openbatch.manager import BatchJobManager
 from openbatch.model import (
     Message,
