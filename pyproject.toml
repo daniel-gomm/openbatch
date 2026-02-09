@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Create batch jobs for the OpenAI API with ease."
 readme = "README.md"
-requires-python = ">=3.5"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
