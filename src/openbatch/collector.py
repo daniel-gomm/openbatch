@@ -25,6 +25,7 @@ class Responses:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
+        self._manager = BatchJobManager()
 
     def parse(self, custom_id: str, model: str, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
@@ -56,7 +57,7 @@ class Responses:
         self._add_request(custom_id, request)
 
     def _add_request(self, custom_id: str, request: ResponsesRequest) -> None:
-        BatchJobManager.add(custom_id, request, self.batch_file_path)
+        self._manager.add(custom_id, request, self.batch_file_path)
 
 class ChatCompletions:
     """
@@ -74,6 +75,7 @@ class ChatCompletions:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
+        self._manager = BatchJobManager()
 
     def parse(self, custom_id: str, model: str, response_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
         """
@@ -105,7 +107,7 @@ class ChatCompletions:
         self._add_request(custom_id, request)
 
     def _add_request(self, custom_id: str, request: ChatCompletionsRequest) -> None:
-        BatchJobManager.add(custom_id, request, self.batch_file_path)
+        self._manager.add(custom_id, request, self.batch_file_path)
 
 class Embeddings:
     """
@@ -123,6 +125,7 @@ class Embeddings:
                 where the batch requests will be written.
         """
         self.batch_file_path = batch_file_path
+        self._manager = BatchJobManager()
 
     def create(self, custom_id: str, model: str, inp: Union[str, list[str]], **kwargs) -> None:
         """
@@ -135,7 +138,7 @@ class Embeddings:
             **kwargs: Additional parameters for the EmbeddingsRequest.
         """
         request = EmbeddingsRequest.model_validate({"model": model, "input": inp, **kwargs})
-        BatchJobManager.add(custom_id, request, self.batch_file_path)
+        self._manager.add(custom_id, request, self.batch_file_path)
 
 
 class BatchCollector:
