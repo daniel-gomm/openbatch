@@ -1,6 +1,5 @@
 import json
 import pytest
-from pathlib import Path
 from pydantic import BaseModel, Field
 from openbatch.collector import BatchCollector, Responses, ChatCompletions, Embeddings
 from openbatch.model import ReasoningConfig

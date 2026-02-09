@@ -1,7 +1,6 @@
 """Integration tests that verify end-to-end workflows."""
 import json
 import pytest
-from pathlib import Path
 from pydantic import BaseModel, Field
 from openbatch import (
     BatchCollector,
