@@ -1,6 +1,13 @@
 # OpenBatch: Simplify OpenAI Batch Job Creation
 
-[](https://www.google.com/search?q=https://badge.fury.io/py/openbatch) **OpenBatch** is a lightweight Python utility designed to streamline the creation of JSONL files for the [OpenAI Batch API](https://platform.openai.com/docs/guides/batch). It provides a type-safe and intuitive interface using Pydantic models to construct requests for the `/v1/responses`, `/v1/chat/completions`, and `/v1/embeddings` endpoints.
+[![PyPI version](https://badge.fury.io/py/openbatch.svg)](https://badge.fury.io/py/openbatch)
+[![Python versions](https://img.shields.io/pypi/pyversions/openbatch.svg)](https://pypi.org/project/openbatch/)
+[![Tests](https://github.com/daniel-gomm/openbatch/actions/workflows/test.yml/badge.svg)](https://github.com/daniel-gomm/openbatch/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/daniel-gomm/openbatch/branch/main/graph/badge.svg)](https://codecov.io/gh/daniel-gomm/openbatch)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/daniel-gomm/openbatch.svg?style=social&label=Star)](https://github.com/daniel-gomm/openbatch)
+
+**OpenBatch** is a lightweight Python utility designed to streamline the creation of JSONL files for the [OpenAI Batch API](https://platform.openai.com/docs/guides/batch). It provides a type-safe and intuitive interface using Pydantic models to construct requests for the `/v1/responses`, `/v1/chat/completions`, and `/v1/embeddings` endpoints.
 
 For a detailed guide on using OpenBatch, please refer to the **[OpenBatch Documentation](https://openbatch.daniel-gomm.com/)**.
 
@@ -189,3 +196,25 @@ You can also override any common setting on a per-instance basis by using the `i
 3.  **Retrieve Results**: Monitor the job's status and, once completed, download the output file with the results.
 
 For detailed instructions on these steps, please refer to the **[Official OpenAI Batch API Documentation](https://platform.openai.com/docs/api-reference/batch)**.
+
+-----
+
+## Testing
+
+OpenBatch includes a comprehensive test suite.
+
+```bash
+# Install with test dependencies
+pip install -e ".[test]"
+
+# Run tests
+pytest
+
+# Run with coverage report
+pytest --cov=openbatch
+```
+
+The test suite includes:
+- Unit tests for all core functionality
+- Integration tests for end-to-end workflows
+- Tests for structured outputs, reasoning models, and unicode handling
