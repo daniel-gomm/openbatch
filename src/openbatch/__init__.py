@@ -11,6 +11,7 @@ from openbatch.model import (
     EmbeddingsRequest,
     ReasoningConfig,
 )
+from openbatch.validation import validate_batch_file
 
 __all__ = [
     "BatchCollector",
@@ -24,4 +25,5 @@ __all__ = [
     "ChatCompletionsRequest",
     "EmbeddingsRequest",
     "ReasoningConfig",
+    "validate_batch_file",
 ]

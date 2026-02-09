@@ -199,6 +199,20 @@ For detailed instructions on these steps, please refer to the **[Official OpenAI
 
 -----
 
+## Validation
+
+OpenBatch includes built-in [validation](https://openbatch.daniel-gomm.com/validation/) to catch errors before uploading to OpenAI.
+
+```python
+from openbatch import validate_batch_file
+
+result = validate_batch_file("my_batch.jsonl")
+if result.is_valid:
+    print(f"Valid! {result.stats['total_requests']} requests")
+```
+
+-----
+
 ## Testing
 
 OpenBatch includes a comprehensive test suite.

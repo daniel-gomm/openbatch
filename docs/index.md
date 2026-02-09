@@ -2,7 +2,7 @@
 
 **OpenBatch** is a lightweight Python utility designed to streamline the creation of JSONL files for the [OpenAI Batch API](https://platform.openai.com/docs/guides/batch). It provides a type-safe and intuitive interface using Pydantic models to construct requests for various endpoints, including `/v1/chat/completions`, `/v1/embeddings`, and the new `/v1/responses` endpoint.
 
-## Key Features ✨
+## Key Features
 
 - **Type-Safe & Modern**: Built with Pydantic for robust, self-documenting, and editor-friendly request models.
 - **Dual APIs for Flexibility**:
