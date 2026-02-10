@@ -168,7 +168,7 @@ class BatchFileValidator:
         # Update statistics
         result.stats["total_requests"] = line_number
         result.stats["unique_custom_ids"] = len(custom_ids)
-        result.stats["endpoints_used"] = list(endpoints)
+        result.stats["endpoints_used"] = sorted(endpoints)
 
         # Check request count
         if self.check_request_count and line_number > self.MAX_REQUESTS:
@@ -180,7 +180,7 @@ class BatchFileValidator:
         # Check for mixed endpoints
         if not self.allow_mixed_endpoints and len(endpoints) > 1:
             result.warnings.append(
-                f"Multiple endpoint types detected: {list(endpoints)}. "
+                f"Multiple endpoint types detected: {sorted(endpoints)}. "
                 "OpenAI recommends one request type per file."
             )
 
