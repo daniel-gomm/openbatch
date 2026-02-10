@@ -110,9 +110,9 @@ def resolve_ref(*, root: dict[str, object], ref: str) -> object:
     resolved = root
     for key in path:
         value = resolved[key]
-        assert isinstance(
-            value, dict
-        ), f"encountered non-dictionary entry while resolving {ref} - {resolved}"
+        assert isinstance(value, dict), (
+            f"encountered non-dictionary entry while resolving {ref} - {resolved}"
+        )
         resolved = value
 
     return resolved
