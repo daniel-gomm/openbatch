@@ -1,10 +1,11 @@
-from typing import Any, Dict, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
 # Copied and adapted from the OpenAI library to avoid adding a dependency https://github.com/openai/openai-python/blob/main/src/openai/lib/_pydantic.py
+
 
 def _ensure_strict_json_schema(
     json_schema: object,
@@ -26,7 +27,9 @@ def _ensure_strict_json_schema(
     definitions = json_schema.get("definitions")
     if isinstance(definitions, dict):
         for definition_name, definition_schema in definitions.items():
-            _ensure_strict_json_schema(definition_schema, path=(*path, "definitions", definition_name), root=root)
+            _ensure_strict_json_schema(
+                definition_schema, path=(*path, "definitions", definition_name), root=root
+            )
 
     typ = json_schema.get("type")
     if typ == "object" and "additionalProperties" not in json_schema:
@@ -36,7 +39,7 @@ def _ensure_strict_json_schema(
     # { 'type': 'object', 'properties': { 'a':  {...} } }
     properties = json_schema.get("properties")
     if isinstance(properties, dict):
-        json_schema["required"] = [prop for prop in properties.keys()]
+        json_schema["required"] = list(properties)
         json_schema["properties"] = {
             key: _ensure_strict_json_schema(prop_schema, path=(*path, "properties", key), root=root)
             for key, prop_schema in properties.items()
@@ -60,7 +63,9 @@ def _ensure_strict_json_schema(
     all_of = json_schema.get("allOf")
     if isinstance(all_of, dict):
         if len(all_of) == 1:
-            json_schema.update(_ensure_strict_json_schema(all_of[0], path=(*path, "allOf", "0"), root=root))
+            json_schema.update(
+                _ensure_strict_json_schema(all_of[0], path=(*path, "allOf", "0"), root=root)
+            )
             json_schema.pop("allOf")
         else:
             json_schema["allOf"] = [
@@ -79,7 +84,9 @@ def _ensure_strict_json_schema(
 
         resolved = resolve_ref(root=root, ref=ref)
         if not isinstance(resolved, dict):
-            raise ValueError(f"Expected `$ref: {ref}` to resolved to a dictionary but got {resolved}")
+            raise ValueError(
+                f"Expected `$ref: {ref}` to resolved to a dictionary but got {resolved}"
+            )
 
         # properties from the json schema take priority over the ones on the `$ref`
         json_schema.update({**resolved, **json_schema})
@@ -90,13 +97,10 @@ def _ensure_strict_json_schema(
 
     return json_schema
 
+
 def has_more_than_n_keys(obj: dict[str, object], n: int) -> bool:
-    i = 0
-    for _ in obj.keys():
-        i += 1
-        if i > n:
-            return True
-    return False
+    return any(i > n for i, _ in enumerate(obj, 1))
+
 
 def resolve_ref(*, root: dict[str, object], ref: str) -> object:
     if not ref.startswith("#/"):
@@ -106,12 +110,15 @@ def resolve_ref(*, root: dict[str, object], ref: str) -> object:
     resolved = root
     for key in path:
         value = resolved[key]
-        assert isinstance(value, dict), f"encountered non-dictionary entry while resolving {ref} - {resolved}"
+        assert isinstance(
+            value, dict
+        ), f"encountered non-dictionary entry while resolving {ref} - {resolved}"
         resolved = value
 
     return resolved
 
-def type_to_json_schema(output_type: type[T]) -> Dict[str, Any]:
+
+def type_to_json_schema(output_type: type[T]) -> dict[str, Any]:
     json_schema = output_type.model_json_schema()
     schema = _ensure_strict_json_schema(json_schema, path=(), root=json_schema)
     return schema

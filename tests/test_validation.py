@@ -1,11 +1,13 @@
 """Tests for batch file validation."""
 
 import json
+
 import pytest
+
 from openbatch.validation import (
-    validate_batch_file,
-    quick_validate,
     ValidationResult,
+    quick_validate,
+    validate_batch_file,
 )
 
 
@@ -21,7 +23,7 @@ class TestValidationResult:
             is_valid=False,
             errors=["Error 1", "Error 2"],
             warnings=["Warning 1"],
-            stats={"total_requests": 10, "file_size_mb": 0.5}
+            stats={"total_requests": 10, "file_size_mb": 0.5},
         )
         output = str(result)
         assert "FAILED" in output
@@ -43,14 +45,14 @@ class TestBatchFileValidator:
                 "custom_id": "req_1",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "Hello"}
+                "body": {"model": "gpt-4", "input": "Hello"},
             },
             {
                 "custom_id": "req_2",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "World"}
-            }
+                "body": {"model": "gpt-4", "input": "World"},
+            },
         ]
 
         with open(temp_batch_file, "w") as f:
@@ -85,14 +87,14 @@ class TestBatchFileValidator:
                 "custom_id": "req_1",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "Hello"}
+                "body": {"model": "gpt-4", "input": "Hello"},
             },
             {
                 "custom_id": "req_1",  # Duplicate
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "World"}
-            }
+                "body": {"model": "gpt-4", "input": "World"},
+            },
         ]
 
         with open(temp_batch_file, "w") as f:
@@ -123,7 +125,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "GET",  # Should be POST
             "url": "/v1/responses",
-            "body": {"model": "gpt-4", "input": "Hello"}
+            "body": {"model": "gpt-4", "input": "Hello"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -139,7 +141,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/invalid",  # Invalid endpoint
-            "body": {"model": "gpt-4"}
+            "body": {"model": "gpt-4"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -155,7 +157,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"model": "gpt-4"}  # Missing input or prompt
+            "body": {"model": "gpt-4"},  # Missing input or prompt
         }
 
         with open(temp_batch_file, "w") as f:
@@ -171,7 +173,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/chat/completions",
-            "body": {"model": "gpt-4"}  # Missing messages
+            "body": {"model": "gpt-4"},  # Missing messages
         }
 
         with open(temp_batch_file, "w") as f:
@@ -187,7 +189,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/chat/completions",
-            "body": {"model": "gpt-4", "messages": "not an array"}
+            "body": {"model": "gpt-4", "messages": "not an array"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -203,7 +205,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/embeddings",
-            "body": {"model": "text-embedding-3-small"}  # Missing input
+            "body": {"model": "text-embedding-3-small"},  # Missing input
         }
 
         with open(temp_batch_file, "w") as f:
@@ -220,14 +222,14 @@ class TestBatchFileValidator:
                 "custom_id": "req_1",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "Hello"}
+                "body": {"model": "gpt-4", "input": "Hello"},
             },
             {
                 "custom_id": "req_2",
                 "method": "POST",
                 "url": "/v1/embeddings",
-                "body": {"model": "text-embedding-3-small", "input": "World"}
-            }
+                "body": {"model": "text-embedding-3-small", "input": "World"},
+            },
         ]
 
         with open(temp_batch_file, "w") as f:
@@ -241,9 +243,13 @@ class TestBatchFileValidator:
     def test_empty_lines_warning(self, temp_batch_file):
         """Test warning for empty lines."""
         with open(temp_batch_file, "w") as f:
-            f.write('{"custom_id": "req_1", "method": "POST", "url": "/v1/responses", "body": {"model": "gpt-4", "input": "Hi"}}\n')
+            f.write(
+                '{"custom_id": "req_1", "method": "POST", "url": "/v1/responses", "body": {"model": "gpt-4", "input": "Hi"}}\n'
+            )
             f.write("\n")  # Empty line
-            f.write('{"custom_id": "req_2", "method": "POST", "url": "/v1/responses", "body": {"model": "gpt-4", "input": "Bye"}}\n')
+            f.write(
+                '{"custom_id": "req_2", "method": "POST", "url": "/v1/responses", "body": {"model": "gpt-4", "input": "Bye"}}\n'
+            )
 
         result = validate_batch_file(temp_batch_file)
         assert any("empty line" in warn.lower() for warn in result.warnings)
@@ -255,7 +261,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"model": "gpt-4", "input": "Hello"}
+            "body": {"model": "gpt-4", "input": "Hello"},
         }
 
         with open(json_file, "w") as f:
@@ -270,7 +276,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"input": "Hello"}  # Missing model
+            "body": {"input": "Hello"},  # Missing model
         }
 
         with open(temp_batch_file, "w") as f:
@@ -286,7 +292,7 @@ class TestBatchFileValidator:
             "custom_id": 123,  # Should be string
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"model": "gpt-4", "input": "Hello"}
+            "body": {"model": "gpt-4", "input": "Hello"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -302,7 +308,7 @@ class TestBatchFileValidator:
             "custom_id": "",  # Empty string
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"model": "gpt-4", "input": "Hello"}
+            "body": {"model": "gpt-4", "input": "Hello"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -318,7 +324,7 @@ class TestBatchFileValidator:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/responses",
-            "body": "not an object"
+            "body": "not an object",
         }
 
         with open(temp_batch_file, "w") as f:
@@ -335,14 +341,14 @@ class TestBatchFileValidator:
                 "custom_id": "req_1",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "Hello"}
+                "body": {"model": "gpt-4", "input": "Hello"},
             },
             {
                 "custom_id": "req_1",  # Duplicate
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "World"}
-            }
+                "body": {"model": "gpt-4", "input": "World"},
+            },
         ]
 
         with open(temp_batch_file, "w") as f:
@@ -361,7 +367,7 @@ class TestConvenienceFunctions:
             "custom_id": "req_1",
             "method": "POST",
             "url": "/v1/responses",
-            "body": {"model": "gpt-4", "input": "Hello"}
+            "body": {"model": "gpt-4", "input": "Hello"},
         }
 
         with open(temp_batch_file, "w") as f:
@@ -386,7 +392,7 @@ class TestComplexScenarios:
                     "custom_id": f"req_{i}",
                     "method": "POST",
                     "url": "/v1/responses",
-                    "body": {"model": "gpt-4", "input": f"Request {i}"}
+                    "body": {"model": "gpt-4", "input": f"Request {i}"},
                 }
                 f.write(json.dumps(request) + "\n")
 
@@ -402,20 +408,20 @@ class TestComplexScenarios:
                 "custom_id": "req_1",
                 "method": "POST",
                 "url": "/v1/responses",
-                "body": {"model": "gpt-4", "input": "Hello"}
+                "body": {"model": "gpt-4", "input": "Hello"},
             },
             {
                 "custom_id": "req_2",
                 "method": "POST",
                 "url": "/v1/chat/completions",
-                "body": {"model": "gpt-4", "messages": [{"role": "user", "content": "Hi"}]}
+                "body": {"model": "gpt-4", "messages": [{"role": "user", "content": "Hi"}]},
             },
             {
                 "custom_id": "req_3",
                 "method": "POST",
                 "url": "/v1/embeddings",
-                "body": {"model": "text-embedding-3-small", "input": "Text"}
-            }
+                "body": {"model": "text-embedding-3-small", "input": "Text"},
+            },
         ]
 
         with open(temp_batch_file, "w") as f:

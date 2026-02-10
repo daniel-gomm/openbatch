@@ -1,25 +1,26 @@
 import json
 import warnings
+from collections.abc import Iterable
 from copy import deepcopy
 from pathlib import Path
-from typing import TypeVar, Iterable, Union
+from typing import TypeVar
 
 from openbatch.model import (
-    PromptTemplate,
-    ReusablePrompt,
-    PromptTemplateInputInstance,
-    ResponsesRequest,
-    ResponsesAPIStrategy,
-    EmbeddingsAPIStrategy,
-    ChatCompletionsAPIStrategy,
     BaseRequest,
-    EmbeddingsRequest,
-    EmbeddingInputInstance,
+    ChatCompletionsAPIStrategy,
     ChatCompletionsRequest,
+    EmbeddingInputInstance,
+    EmbeddingsAPIStrategy,
+    EmbeddingsRequest,
+    PromptTemplate,
+    PromptTemplateInputInstance,
+    ResponsesAPIStrategy,
+    ResponsesRequest,
+    ReusablePrompt,
 )
 
 B = TypeVar("B", bound=BaseRequest)
-R = TypeVar("R", bound=Union[ResponsesRequest, ChatCompletionsRequest])
+R = TypeVar("R", bound=ResponsesRequest | ChatCompletionsRequest)
 
 
 class BatchJobManager:
@@ -41,7 +42,7 @@ class BatchJobManager:
 
     def add_templated_instances(
         self,
-        prompt: Union[PromptTemplate, ReusablePrompt],
+        prompt: PromptTemplate | ReusablePrompt,
         common_request: R,
         input_instances: Iterable[PromptTemplateInputInstance],
         save_file_path: str | Path,
@@ -69,9 +70,7 @@ class BatchJobManager:
                         unsupported request type.
         """
         if isinstance(common_request, EmbeddingsRequest):
-            raise ValueError(
-                "Embeddings API is not supported with templated instances."
-            )
+            raise ValueError("Embeddings API is not supported with templated instances.")
         elif not isinstance(common_request, ResponsesRequest) and not isinstance(
             common_request, ChatCompletionsRequest
         ):
@@ -84,6 +83,7 @@ class BatchJobManager:
             warnings.warn(
                 f"File {save_file_path} already exists. New contents are appended to the file. Make sure that this is intended behavior.",
                 category=RuntimeWarning,
+                stacklevel=2,
             )
 
         for instance in input_instances:
@@ -92,15 +92,13 @@ class BatchJobManager:
                 request = request.model_copy(update=instance.instance_request_options)
             request = self._handle_prompt(prompt, request, instance)
 
-            self.add(
-                custom_id=instance.id, request=request, save_file_path=save_file_path
-            )
+            self.add(custom_id=instance.id, request=request, save_file_path=save_file_path)
 
     def add_embedding_requests(
         self,
         inputs: Iterable[EmbeddingInputInstance],
         common_request: EmbeddingsRequest,
-        save_file_path: Union[str, Path],
+        save_file_path: str | Path,
     ) -> None:
         """
         Adds multiple embedding request instances to a batch request file.
@@ -123,15 +121,13 @@ class BatchJobManager:
                 request = request.model_copy(update=instance.instance_request_options)
             request.set_input(instance.input)
 
-            self.add(
-                custom_id=instance.id, request=request, save_file_path=save_file_path
-            )
+            self.add(custom_id=instance.id, request=request, save_file_path=save_file_path)
 
     def add(
         self,
         custom_id: str,
         request: B,
-        save_file_path: Union[str, Path],
+        save_file_path: str | Path,
     ) -> None:
         """
         Creates a single batch request object and appends it to the specified file.
@@ -153,9 +149,7 @@ class BatchJobManager:
         if isinstance(request, ResponsesRequest):
             strategy = ResponsesAPIStrategy()
             if request.input is None and request.prompt is None:
-                raise ValueError(
-                    "Responses request must define either an input or a prompt."
-                )
+                raise ValueError("Responses request must define either an input or a prompt.")
         elif isinstance(request, ChatCompletionsRequest):
             strategy = ChatCompletionsAPIStrategy()
             if request.messages is None:
@@ -170,14 +164,10 @@ class BatchJobManager:
         save_file_path = Path(save_file_path)
         save_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        batch_request = strategy.create_request(
-            custom_id=custom_id, body=request.to_dict()
-        )
+        batch_request = strategy.create_request(custom_id=custom_id, body=request.to_dict())
 
         with open(save_file_path, "a+") as outfile:
-            outfile.write(
-                json.dumps(batch_request, ensure_ascii=self.ensure_ascii) + "\n"
-            )
+            outfile.write(json.dumps(batch_request, ensure_ascii=self.ensure_ascii) + "\n")
 
     @staticmethod
     def _handle_prompt(
@@ -187,9 +177,7 @@ class BatchJobManager:
     ) -> R:
         if isinstance(prompt, ReusablePrompt):
             if not isinstance(request, ResponsesRequest):
-                raise ValueError(
-                    "Reusable prompts can only be used with ResponsesOptions."
-                )
+                raise ValueError("Reusable prompts can only be used with ResponsesOptions.")
             request.prompt = ReusablePrompt(
                 id=prompt.id,
                 version=prompt.version,

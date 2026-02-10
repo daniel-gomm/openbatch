@@ -1,22 +1,22 @@
 from os import PathLike
+from pathlib import Path
 from types import SimpleNamespace
-from typing import Union, Optional
 
 from pydantic import BaseModel
 
 from openbatch.manager import BatchJobManager
-from openbatch.model import ResponsesRequest, ChatCompletionsRequest, EmbeddingsRequest
+from openbatch.model import ChatCompletionsRequest, EmbeddingsRequest, ResponsesRequest
 
 
 class Responses:
     """
-   A utility class for easily constructing and adding individual
-   Responses API requests to a batch job file.
+    A utility class for easily constructing and adding individual
+    Responses API requests to a batch job file.
 
-   It acts as a high-level interface for the '/v1/responses' endpoint.
-   """
+    It acts as a high-level interface for the '/v1/responses' endpoint.
+    """
 
-    def __init__(self, batch_file_path: Union[str, PathLike]):
+    def __init__(self, batch_file_path: str | PathLike):
         """
         Initializes the Responses collector.
 
@@ -24,10 +24,12 @@ class Responses:
             batch_file_path (Union[str, PathLike]): The path to the JSONL file
                 where the batch requests will be written.
         """
-        self.batch_file_path = batch_file_path
+        self.batch_file_path = Path(batch_file_path)
         self._manager = BatchJobManager()
 
-    def parse(self, custom_id: str, model: str, text_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
+    def parse(
+        self, custom_id: str, model: str, text_format: type[BaseModel] | None = None, **kwargs
+    ) -> None:
         """
         Creates a ResponsesRequest, optionally enforcing a JSON output structure,
         and adds it to the batch file. Use it like the `OpenAI().responses.parse()` method.
@@ -59,14 +61,16 @@ class Responses:
     def _add_request(self, custom_id: str, request: ResponsesRequest) -> None:
         self._manager.add(custom_id, request, self.batch_file_path)
 
+
 class ChatCompletions:
     """
-   A utility class for easily constructing and adding individual
-   Chat Completions API requests to a batch job file.
+    A utility class for easily constructing and adding individual
+    Chat Completions API requests to a batch job file.
 
-   It acts as a high-level interface for the '/v1/chat/completions' endpoint.
-   """
-    def __init__(self, batch_file_path: Union[str, PathLike]):
+    It acts as a high-level interface for the '/v1/chat/completions' endpoint.
+    """
+
+    def __init__(self, batch_file_path: str | PathLike):
         """
         Initializes the ChatCompletions collector.
 
@@ -74,10 +78,12 @@ class ChatCompletions:
             batch_file_path (Union[str, PathLike]): The path to the JSONL file
                 where the batch requests will be written.
         """
-        self.batch_file_path = batch_file_path
+        self.batch_file_path = Path(batch_file_path)
         self._manager = BatchJobManager()
 
-    def parse(self, custom_id: str, model: str, response_format: Optional[type[BaseModel]] = None, **kwargs) -> None:
+    def parse(
+        self, custom_id: str, model: str, response_format: type[BaseModel] | None = None, **kwargs
+    ) -> None:
         """
         Creates a ChatCompletionsRequest, optionally enforcing a JSON output structure,
         and adds it to the batch file. Use it like the `OpenAI().chat.completions.parse()` method.
@@ -109,6 +115,7 @@ class ChatCompletions:
     def _add_request(self, custom_id: str, request: ChatCompletionsRequest) -> None:
         self._manager.add(custom_id, request, self.batch_file_path)
 
+
 class Embeddings:
     """
     A utility class for easily constructing and adding individual
@@ -116,7 +123,8 @@ class Embeddings:
 
     It acts as a high-level interface for the '/v1/embeddings' endpoint.
     """
-    def __init__(self, batch_file_path: Union[str, PathLike]):
+
+    def __init__(self, batch_file_path: str | PathLike):
         """
         Initializes the Embeddings collector.
 
@@ -124,10 +132,10 @@ class Embeddings:
             batch_file_path (Union[str, PathLike]): The path to the JSONL file
                 where the batch requests will be written.
         """
-        self.batch_file_path = batch_file_path
+        self.batch_file_path = Path(batch_file_path)
         self._manager = BatchJobManager()
 
-    def create(self, custom_id: str, model: str, inp: Union[str, list[str]], **kwargs) -> None:
+    def create(self, custom_id: str, model: str, inp: str | list[str], **kwargs) -> None:
         """
         Creates an EmbeddingsRequest and adds it to the batch file. Use it like the `OpenAI().embeddings.create()` method.
 
@@ -160,7 +168,8 @@ class BatchCollector:
             where the batch requests will be written. The file will be created
             if it doesn't exist and appended to if it does.
     """
-    def __init__(self, batch_file_path: Union[str, PathLike]):
+
+    def __init__(self, batch_file_path: str | PathLike):
         self.responses = Responses(batch_file_path)
         self.chat = SimpleNamespace()
         self.chat.completions = ChatCompletions(batch_file_path)

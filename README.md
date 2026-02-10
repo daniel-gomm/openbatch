@@ -232,3 +232,17 @@ The test suite includes:
 - Unit tests for all core functionality
 - Integration tests for end-to-end workflows
 - Tests for structured outputs, reasoning models, and unicode handling
+
+-----
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Development setup
+- Code quality standards
+- Branch naming conventions (`feature/`, `fix/`, `documentation/`)
+- Commit message conventions (using [gitmoji](https://gitmoji.dev/))
+- Opening issues and pull requests
+
+For bugs and feature requests, please [open an issue](https://github.com/TiepNguyen2003/OpenAIBatchJobBuilder/issues).

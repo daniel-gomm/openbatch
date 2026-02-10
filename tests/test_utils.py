@@ -1,11 +1,11 @@
 import pytest
 from pydantic import BaseModel, Field
-from typing import Optional, List
+
 from openbatch._utils import (
-    type_to_json_schema,
     _ensure_strict_json_schema,
     has_more_than_n_keys,
     resolve_ref,
+    type_to_json_schema,
 )
 
 
@@ -34,9 +34,7 @@ class TestResolveRef:
         assert result == {"type": "object"}
 
     def test_resolve_nested_ref(self):
-        root = {
-            "definitions": {"Nested": {"properties": {"field": {"type": "string"}}}}
-        }
+        root = {"definitions": {"Nested": {"properties": {"field": {"type": "string"}}}}}
         result = resolve_ref(root=root, ref="#/definitions/Nested/properties/field")
         assert result == {"type": "string"}
 
@@ -100,7 +98,10 @@ class TestEnsureStrictJsonSchema:
 
     def test_any_of_union(self):
         schema = {
-            "anyOf": [{"type": "string"}, {"type": "object", "properties": {"a": {"type": "string"}}}]
+            "anyOf": [
+                {"type": "string"},
+                {"type": "object", "properties": {"a": {"type": "string"}}},
+            ]
         }
         result = _ensure_strict_json_schema(schema, path=(), root=schema)
         assert len(result["anyOf"]) == 2
@@ -128,9 +129,7 @@ class TestEnsureStrictJsonSchema:
         schema = {
             "type": "object",
             "properties": {"user": {"$ref": "#/definitions/User"}},
-            "definitions": {
-                "User": {"type": "object", "properties": {"name": {"type": "string"}}}
-            },
+            "definitions": {"User": {"type": "object", "properties": {"name": {"type": "string"}}}},
         }
         result = _ensure_strict_json_schema(schema, path=(), root=schema)
         assert result["definitions"]["User"]["additionalProperties"] is False
@@ -140,9 +139,7 @@ class TestEnsureStrictJsonSchema:
         schema = {
             "type": "object",
             "properties": {"user": {"$ref": "#/$defs/User"}},
-            "$defs": {
-                "User": {"type": "object", "properties": {"name": {"type": "string"}}}
-            },
+            "$defs": {"User": {"type": "object", "properties": {"name": {"type": "string"}}}},
         }
         result = _ensure_strict_json_schema(schema, path=(), root=schema)
         assert result["$defs"]["User"]["additionalProperties"] is False
@@ -157,9 +154,7 @@ class TestEnsureStrictJsonSchema:
                     "description": "The user object",
                 }
             },
-            "definitions": {
-                "User": {"type": "object", "properties": {"name": {"type": "string"}}}
-            },
+            "definitions": {"User": {"type": "object", "properties": {"name": {"type": "string"}}}},
         }
         result = _ensure_strict_json_schema(schema, path=(), root=schema)
         # The $ref should be unrolled when there are additional properties
@@ -186,7 +181,7 @@ class TestTypeToJsonSchema:
     def test_model_with_optional_field(self):
         class ModelWithOptional(BaseModel):
             name: str
-            nickname: Optional[str] = None
+            nickname: str | None = None
 
         schema = type_to_json_schema(ModelWithOptional)
         # All properties should be required in strict mode
@@ -217,7 +212,7 @@ class TestTypeToJsonSchema:
     def test_model_with_list_field(self):
         class TodoList(BaseModel):
             title: str
-            items: List[str]
+            items: list[str]
 
         schema = type_to_json_schema(TodoList)
         assert schema["properties"]["items"]["type"] == "array"
@@ -239,12 +234,12 @@ class TestTypeToJsonSchema:
 
         class Order(BaseModel):
             order_id: str
-            items: List[Item]
+            items: list[Item]
             total: float
 
         class Customer(BaseModel):
             name: str
-            orders: List[Order]
+            orders: list[Order]
 
         schema = type_to_json_schema(Customer)
         assert schema["additionalProperties"] is False
