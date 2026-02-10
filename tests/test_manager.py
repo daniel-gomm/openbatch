@@ -1,16 +1,18 @@
 import json
-import pytest
 import warnings
+
+import pytest
+
 from openbatch.manager import BatchJobManager
 from openbatch.model import (
+    ChatCompletionsRequest,
+    EmbeddingInputInstance,
+    EmbeddingsRequest,
     Message,
     PromptTemplate,
-    ReusablePrompt,
     PromptTemplateInputInstance,
-    EmbeddingInputInstance,
     ResponsesRequest,
-    ChatCompletionsRequest,
-    EmbeddingsRequest,
+    ReusablePrompt,
 )
 
 
@@ -38,7 +40,7 @@ class TestBatchJobManagerAdd:
         manager.add("test_id", request, temp_batch_file)
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             line = f.readline()
             data = json.loads(line)
 
@@ -55,7 +57,7 @@ class TestBatchJobManagerAdd:
         manager.add("chat_id", request, temp_batch_file)
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "chat_id"
@@ -67,7 +69,7 @@ class TestBatchJobManagerAdd:
         manager.add("emb_id", request, temp_batch_file)
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "emb_id"
@@ -81,7 +83,7 @@ class TestBatchJobManagerAdd:
         manager.add("id1", request1, temp_batch_file)
         manager.add("id2", request2, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -90,16 +92,12 @@ class TestBatchJobManagerAdd:
         assert data1["custom_id"] == "id1"
         assert data2["custom_id"] == "id2"
 
-    def test_add_responses_request_without_input_or_prompt_raises(
-        self, manager, temp_batch_file
-    ):
+    def test_add_responses_request_without_input_or_prompt_raises(self, manager, temp_batch_file):
         request = ResponsesRequest(model="gpt-4")
         with pytest.raises(ValueError, match="must define either an input or a prompt"):
             manager.add("test_id", request, temp_batch_file)
 
-    def test_add_chat_completions_request_without_messages_raises(
-        self, manager, temp_batch_file
-    ):
+    def test_add_chat_completions_request_without_messages_raises(self, manager, temp_batch_file):
         # messages is required in the Pydantic model, so we create a request
         # and then set messages to None manually
         request = ChatCompletionsRequest(model="gpt-4", messages=[])
@@ -127,7 +125,7 @@ class TestBatchJobManagerAdd:
         request = ResponsesRequest(model="gpt-4", input="Hello 世界")
         manager_no_ascii.add("test_id", request, temp_batch_file)
 
-        with open(temp_batch_file, "r", encoding="utf-8") as f:
+        with open(temp_batch_file, encoding="utf-8") as f:
             content = f.read()
             data = json.loads(content)
 
@@ -138,7 +136,7 @@ class TestBatchJobManagerAdd:
         request = ResponsesRequest(model="gpt-4", input="Hello 世界")
         manager.add("test_id", request, temp_batch_file)
 
-        with open(temp_batch_file, "r", encoding="utf-8") as f:
+        with open(temp_batch_file, encoding="utf-8") as f:
             raw_content = f.read()
 
         # ASCII escaped version should not contain the raw unicode characters
@@ -162,7 +160,7 @@ class TestBatchJobManagerTemplatedInstances:
 
         manager.add_templated_instances(template, common_request, instances, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -194,7 +192,7 @@ class TestBatchJobManagerTemplatedInstances:
 
         manager.add_templated_instances(template, common_request, instances, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -210,11 +208,9 @@ class TestBatchJobManagerTemplatedInstances:
             PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={"var": "value"})
         ]
 
-        manager.add_templated_instances(
-            reusable_prompt, common_request, instances, temp_batch_file
-        )
+        manager.add_templated_instances(reusable_prompt, common_request, instances, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["body"]["prompt"]["id"] == "prompt_123"
@@ -230,14 +226,12 @@ class TestBatchJobManagerTemplatedInstances:
                 prompt_value_mapping={"text": "Hello"},
                 instance_request_options={"temperature": 0.9},
             ),
-            PromptTemplateInputInstance(
-                id="inst_2", prompt_value_mapping={"text": "World"}
-            ),
+            PromptTemplateInputInstance(id="inst_2", prompt_value_mapping={"text": "World"}),
         ]
 
         manager.add_templated_instances(template, common_request, instances, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         data1 = json.loads(lines[0])
@@ -250,17 +244,13 @@ class TestBatchJobManagerTemplatedInstances:
 
     def test_add_templated_instances_with_embeddings_raises(self, manager, temp_batch_file):
         template = PromptTemplate(messages=[Message(role="user", content="Test")])
-        common_request = EmbeddingsRequest(
-            model="text-embedding-3-small", input="dummy"
-        )
+        common_request = EmbeddingsRequest(model="text-embedding-3-small", input="dummy")
         instances = [
             PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={"text": "Test"})
         ]
 
         with pytest.raises(ValueError, match="Embeddings API is not supported"):
-            manager.add_templated_instances(
-                template, common_request, instances, temp_batch_file
-            )
+            manager.add_templated_instances(template, common_request, instances, temp_batch_file)
 
     def test_add_templated_instances_reusable_prompt_with_chat_raises(
         self, manager, temp_batch_file
@@ -282,16 +272,12 @@ class TestBatchJobManagerTemplatedInstances:
 
         template = PromptTemplate(messages=[Message(role="user", content="Test")])
         common_request = ResponsesRequest(model="gpt-4")
-        instances = [
-            PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={})
-        ]
+        instances = [PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={})]
 
         # Should warn when appending to existing file
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            manager.add_templated_instances(
-                template, common_request, instances, temp_batch_file
-            )
+            manager.add_templated_instances(template, common_request, instances, temp_batch_file)
             assert len(w) == 1
             assert "already exists" in str(w[0].message)
 
@@ -300,9 +286,7 @@ class TestBatchJobManagerTemplatedInstances:
 
         template = PromptTemplate(messages=[Message(role="user", content="Test")])
         common_request = ResponsesRequest(model="gpt-4")
-        instances = [
-            PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={})
-        ]
+        instances = [PromptTemplateInputInstance(id="inst_1", prompt_value_mapping={})]
 
         # Should not warn when suppress_warnings=True
         with warnings.catch_warnings(record=True) as w:
@@ -319,9 +303,7 @@ class TestBatchJobManagerTemplatedInstances:
 
 class TestBatchJobManagerEmbeddingRequests:
     def test_add_embedding_requests(self, manager, temp_batch_file):
-        common_request = EmbeddingsRequest(
-            model="text-embedding-3-small", dimensions=512
-        )
+        common_request = EmbeddingsRequest(model="text-embedding-3-small", dimensions=512)
         inputs = [
             EmbeddingInputInstance(id="emb_1", input="First text"),
             EmbeddingInputInstance(id="emb_2", input="Second text"),
@@ -329,7 +311,7 @@ class TestBatchJobManagerEmbeddingRequests:
 
         manager.add_embedding_requests(inputs, common_request, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -351,16 +333,14 @@ class TestBatchJobManagerEmbeddingRequests:
 
         manager.add_embedding_requests(inputs, common_request, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert isinstance(data["body"]["input"], list)
         assert len(data["body"]["input"]) == 2
 
     def test_add_embedding_requests_with_instance_options(self, manager, temp_batch_file):
-        common_request = EmbeddingsRequest(
-            model="text-embedding-3-small", dimensions=512
-        )
+        common_request = EmbeddingsRequest(model="text-embedding-3-small", dimensions=512)
         inputs = [
             EmbeddingInputInstance(
                 id="emb_1",
@@ -372,7 +352,7 @@ class TestBatchJobManagerEmbeddingRequests:
 
         manager.add_embedding_requests(inputs, common_request, temp_batch_file)
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         data1 = json.loads(lines[0])

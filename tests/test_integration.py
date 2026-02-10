@@ -1,18 +1,20 @@
 """Integration tests that verify end-to-end workflows."""
+
 import json
+
 import pytest
 from pydantic import BaseModel, Field
+
 from openbatch import (
     BatchCollector,
     BatchJobManager,
+    EmbeddingInputInstance,
+    EmbeddingsRequest,
     Message,
     PromptTemplate,
     PromptTemplateInputInstance,
-    EmbeddingInputInstance,
-    ResponsesRequest,
-    ChatCompletionsRequest,
-    EmbeddingsRequest,
     ReasoningConfig,
+    ResponsesRequest,
 )
 
 
@@ -67,15 +69,15 @@ class TestEndToEndBatchCreation:
         assert chat_file.exists()
         assert embeddings_file.exists()
 
-        with open(responses_file, "r") as f:
+        with open(responses_file) as f:
             resp_data = json.loads(f.readline())
             assert resp_data["url"] == "/v1/responses"
 
-        with open(chat_file, "r") as f:
+        with open(chat_file) as f:
             chat_data = json.loads(f.readline())
             assert chat_data["url"] == "/v1/chat/completions"
 
-        with open(embeddings_file, "r") as f:
+        with open(embeddings_file) as f:
             emb_data = json.loads(f.readline())
             assert emb_data["url"] == "/v1/embeddings"
 
@@ -97,9 +99,7 @@ class TestEndToEndBatchCreation:
             ]
         )
 
-        common_config = ResponsesRequest(
-            model="gpt-4-mini", temperature=0.8, max_output_tokens=100
-        )
+        common_config = ResponsesRequest(model="gpt-4-mini", temperature=0.8, max_output_tokens=100)
 
         products = [
             PromptTemplateInputInstance(
@@ -137,7 +137,7 @@ class TestEndToEndBatchCreation:
 
         # Verify
         assert batch_file.exists()
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 3
@@ -157,9 +157,7 @@ class TestEndToEndBatchCreation:
         """Test BatchJobManager for bulk embeddings generation."""
         batch_file = temp_dir / "embeddings_batch.jsonl"
 
-        common_config = EmbeddingsRequest(
-            model="text-embedding-3-small", dimensions=512
-        )
+        common_config = EmbeddingsRequest(model="text-embedding-3-small", dimensions=512)
 
         documents = [
             EmbeddingInputInstance(id="doc_1", input="The sky is blue."),
@@ -178,7 +176,7 @@ class TestEndToEndBatchCreation:
         )
 
         assert batch_file.exists()
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 4
@@ -220,7 +218,7 @@ class TestStructuredOutputWorkflows:
             )
 
         assert batch_file.exists()
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 3
@@ -267,7 +265,7 @@ class TestStructuredOutputWorkflows:
                 ],
             )
 
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -306,7 +304,7 @@ class TestReasoningModelsWorkflow:
                 reasoning=ReasoningConfig(effort=item["effort"], summary="detailed"),
             )
 
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -326,7 +324,7 @@ class TestUnicodeAndSpecialCharacters:
         request = ResponsesRequest(model="gpt-4", input="Hello 世界! Привет! مرحبا")
         manager.add("unicode_test", request, batch_file)
 
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             content = f.read()
 
         # Should contain escaped unicode
@@ -339,12 +337,10 @@ class TestUnicodeAndSpecialCharacters:
         batch_file = temp_dir / "unicode_raw.jsonl"
         manager = BatchJobManager(ensure_ascii=False)
 
-        request = ResponsesRequest(
-            model="gpt-4", input="Hello 世界! Привет! مرحبا Emoji: 🚀"
-        )
+        request = ResponsesRequest(model="gpt-4", input="Hello 世界! Привет! مرحبا Emoji: 🚀")
         manager.add("unicode_test", request, batch_file)
 
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             content = f.read()
 
         # Raw characters should be present
@@ -361,9 +357,7 @@ class TestLargeScaleBatchGeneration:
         """Test generating a batch file with 1000 requests."""
         batch_file = temp_dir / "large_batch.jsonl"
 
-        template = PromptTemplate(
-            messages=[Message(role="user", content="Classify: {text}")]
-        )
+        template = PromptTemplate(messages=[Message(role="user", content="Classify: {text}")])
 
         common_request = ResponsesRequest(model="gpt-4-mini", max_output_tokens=10)
 
@@ -385,7 +379,7 @@ class TestLargeScaleBatchGeneration:
 
         # Verify
         assert batch_file.exists()
-        with open(batch_file, "r") as f:
+        with open(batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 1000

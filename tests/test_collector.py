@@ -1,7 +1,9 @@
 import json
+
 import pytest
 from pydantic import BaseModel, Field
-from openbatch.collector import BatchCollector, Responses, ChatCompletions, Embeddings
+
+from openbatch.collector import BatchCollector, ChatCompletions, Embeddings, Responses
 from openbatch.model import ReasoningConfig
 
 
@@ -23,7 +25,7 @@ class TestResponses:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "req_1"
@@ -42,7 +44,7 @@ class TestResponses:
             instructions="Be concise",
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "req_2"
@@ -63,7 +65,7 @@ class TestResponses:
             instructions="Analyze sentiment",
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "req_3"
@@ -81,7 +83,7 @@ class TestResponses:
             reasoning=ReasoningConfig(effort="high", summary="detailed"),
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["body"]["reasoning"]["effort"] == "high"
@@ -92,7 +94,7 @@ class TestResponses:
         responses.create(custom_id="req_1", model="gpt-4", input="First")
         responses.create(custom_id="req_2", model="gpt-4", input="Second")
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -116,7 +118,7 @@ class TestChatCompletions:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "chat_1"
@@ -133,7 +135,7 @@ class TestChatCompletions:
             messages=[{"role": "user", "content": "Hi"}],
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "chat_2"
@@ -152,7 +154,7 @@ class TestChatCompletions:
             messages=[{"role": "user", "content": "What is 2+2?"}],
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "chat_3"
@@ -169,23 +171,21 @@ class TestChatCompletions:
             reasoning_effort="high",
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["body"]["reasoning_effort"] == "high"
 
     def test_chat_completions_multiple_requests(self, temp_batch_file):
         chat = ChatCompletions(temp_batch_file)
-        chat.create(
-            custom_id="chat_1", model="gpt-4", messages=[{"role": "user", "content": "Hi"}]
-        )
+        chat.create(custom_id="chat_1", model="gpt-4", messages=[{"role": "user", "content": "Hi"}])
         chat.create(
             custom_id="chat_2",
             model="gpt-4",
             messages=[{"role": "user", "content": "Bye"}],
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -201,7 +201,7 @@ class TestEmbeddings:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["custom_id"] == "emb_1"
@@ -217,7 +217,7 @@ class TestEmbeddings:
             inp=["Text 1", "Text 2", "Text 3"],
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert isinstance(data["body"]["input"], list)
@@ -232,7 +232,7 @@ class TestEmbeddings:
             dimensions=512,
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["body"]["dimensions"] == 512
@@ -242,7 +242,7 @@ class TestEmbeddings:
         embeddings.create(custom_id="emb_1", model="text-embedding-3-small", inp="First")
         embeddings.create(custom_id="emb_2", model="text-embedding-3-small", inp="Second")
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             lines = f.readlines()
 
         assert len(lines) == 2
@@ -264,7 +264,7 @@ class TestBatchCollector:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["url"] == "/v1/responses"
@@ -278,7 +278,7 @@ class TestBatchCollector:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["url"] == "/v1/chat/completions"
@@ -292,7 +292,7 @@ class TestBatchCollector:
         )
 
         assert temp_batch_file.exists()
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert data["url"] == "/v1/embeddings"
@@ -304,9 +304,7 @@ class TestBatchCollector:
         embeddings_file = tmp_path / "embeddings.jsonl"
 
         responses_collector = BatchCollector(responses_file)
-        responses_collector.responses.create(
-            custom_id="req_1", model="gpt-4", input="Test"
-        )
+        responses_collector.responses.create(custom_id="req_1", model="gpt-4", input="Test")
 
         chat_collector = BatchCollector(chat_file)
         chat_collector.chat.completions.create(
@@ -339,7 +337,7 @@ class TestBatchCollector:
             instructions="Provide structured analysis",
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert "text" in data["body"]
@@ -363,7 +361,7 @@ class TestBatchCollector:
             ],
         )
 
-        with open(temp_batch_file, "r") as f:
+        with open(temp_batch_file) as f:
             data = json.loads(f.readline())
 
         assert "response_format" in data["body"]

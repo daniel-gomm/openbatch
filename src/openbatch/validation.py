@@ -7,9 +7,9 @@ API requirements.
 """
 
 import json
-from pathlib import Path
-from typing import Union, List, Dict, Any, Set
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, ClassVar, TextIO
 
 
 @dataclass
@@ -23,10 +23,11 @@ class ValidationResult:
         warnings (List[str]): List of non-critical warnings
         stats (Dict[str, Any]): Statistics about the batch file
     """
+
     is_valid: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    stats: Dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    stats: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """Human-readable summary of validation results."""
@@ -64,21 +65,21 @@ class BatchFileValidator:
     """
 
     # OpenAI Batch API constraints (as of 2026)
-    MAX_FILE_SIZE_MB = 200
-    MAX_REQUESTS = 50000
-    VALID_ENDPOINTS = {
+    MAX_FILE_SIZE_MB: int = 200
+    MAX_REQUESTS: int = 50000
+    VALID_ENDPOINTS: ClassVar[set[str]] = {
         "/v1/responses",
         "/v1/chat/completions",
-        "/v1/embeddings"
+        "/v1/embeddings",
     }
-    REQUIRED_FIELDS = {"custom_id", "method", "url", "body"}
+    REQUIRED_FIELDS: ClassVar[set[str]] = {"custom_id", "method", "url", "body"}
 
     def __init__(
         self,
         check_custom_id_uniqueness: bool = True,
         check_file_size: bool = True,
         check_request_count: bool = True,
-        allow_mixed_endpoints: bool = False
+        allow_mixed_endpoints: bool = False,
     ):
         """
         Initialize the validator with configuration options.
@@ -94,7 +95,7 @@ class BatchFileValidator:
         self.check_request_count = check_request_count
         self.allow_mixed_endpoints = allow_mixed_endpoints
 
-    def validate_file(self, file_path: Union[str, Path]) -> ValidationResult:
+    def validate_file(self, file_path: str | Path) -> ValidationResult:
         """
         Validate a batch file.
 
@@ -115,9 +116,7 @@ class BatchFileValidator:
 
         # Check file extension
         if file_path.suffix != ".jsonl":
-            result.warnings.append(
-                f"File extension is '{file_path.suffix}', expected '.jsonl'"
-            )
+            result.warnings.append(f"File extension is '{file_path.suffix}', expected '.jsonl'")
 
         # Check file size
         if self.check_file_size:
@@ -126,25 +125,24 @@ class BatchFileValidator:
 
             if file_size_mb > self.MAX_FILE_SIZE_MB:
                 result.errors.append(
-                    f"File size ({file_size_mb:.2f} MB) exceeds limit "
-                    f"({self.MAX_FILE_SIZE_MB} MB)"
+                    f"File size ({file_size_mb:.2f} MB) exceeds limit ({self.MAX_FILE_SIZE_MB} MB)"
                 )
                 result.is_valid = False
 
         # Validate content
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 self._validate_content(f, result)
         except Exception as e:
-            result.errors.append(f"Error reading file: {str(e)}")
+            result.errors.append(f"Error reading file: {e!s}")
             result.is_valid = False
 
         return result
 
-    def _validate_content(self, file_handle, result: ValidationResult) -> None:
+    def _validate_content(self, file_handle: TextIO, result: ValidationResult) -> None:
         """Validate the content of the batch file."""
-        custom_ids: Set[str] = set()
-        endpoints: Set[str] = set()
+        custom_ids: set[str] = set()
+        endpoints: set[str] = set()
         line_number = 0
 
         for line in file_handle:
@@ -160,9 +158,7 @@ class BatchFileValidator:
             try:
                 request = json.loads(line)
             except json.JSONDecodeError as e:
-                result.errors.append(
-                    f"Line {line_number}: Invalid JSON - {str(e)}"
-                )
+                result.errors.append(f"Line {line_number}: Invalid JSON - {e!s}")
                 result.is_valid = False
                 continue
 
@@ -190,20 +186,18 @@ class BatchFileValidator:
 
     def _validate_request(
         self,
-        request: Dict[str, Any],
+        request: dict[str, Any],
         line_number: int,
-        custom_ids: Set[str],
-        endpoints: Set[str],
-        result: ValidationResult
+        custom_ids: set[str],
+        endpoints: set[str],
+        result: ValidationResult,
     ) -> None:
         """Validate a single request object."""
 
         # Check required fields
         missing_fields = self.REQUIRED_FIELDS - set(request.keys())
         if missing_fields:
-            result.errors.append(
-                f"Line {line_number}: Missing required fields: {missing_fields}"
-            )
+            result.errors.append(f"Line {line_number}: Missing required fields: {missing_fields}")
             result.is_valid = False
             return
 
@@ -216,9 +210,7 @@ class BatchFileValidator:
             result.is_valid = False
         elif self.check_custom_id_uniqueness:
             if custom_id in custom_ids:
-                result.errors.append(
-                    f"Line {line_number}: Duplicate custom_id '{custom_id}'"
-                )
+                result.errors.append(f"Line {line_number}: Duplicate custom_id '{custom_id}'")
                 result.is_valid = False
             else:
                 custom_ids.add(custom_id)
@@ -226,9 +218,7 @@ class BatchFileValidator:
         # Validate method
         method = request.get("method")
         if method != "POST":
-            result.errors.append(
-                f"Line {line_number}: Invalid method '{method}' (must be 'POST')"
-            )
+            result.errors.append(f"Line {line_number}: Invalid method '{method}' (must be 'POST')")
             result.is_valid = False
 
         # Validate URL
@@ -245,27 +235,19 @@ class BatchFileValidator:
         # Validate body
         body = request.get("body")
         if not isinstance(body, dict):
-            result.errors.append(
-                f"Line {line_number}: 'body' must be a JSON object"
-            )
+            result.errors.append(f"Line {line_number}: 'body' must be a JSON object")
             result.is_valid = False
         else:
-            self._validate_body(body, url, line_number, result)
+            self._validate_body(body, str(url), line_number, result)
 
     def _validate_body(
-        self,
-        body: Dict[str, Any],
-        endpoint: str,
-        line_number: int,
-        result: ValidationResult
+        self, body: dict[str, Any], endpoint: str, line_number: int, result: ValidationResult
     ) -> None:
         """Validate the request body based on endpoint type."""
 
         # Check for model field (required for all endpoints)
         if "model" not in body:
-            result.errors.append(
-                f"Line {line_number}: Missing required field 'model' in body"
-            )
+            result.errors.append(f"Line {line_number}: Missing required field 'model' in body")
             result.is_valid = False
 
         # Endpoint-specific validation
@@ -283,24 +265,19 @@ class BatchFileValidator:
                 )
                 result.is_valid = False
             elif not isinstance(body["messages"], list):
-                result.errors.append(
-                    f"Line {line_number}: 'messages' must be an array"
-                )
+                result.errors.append(f"Line {line_number}: 'messages' must be an array")
                 result.is_valid = False
 
-        elif endpoint == "/v1/embeddings":
-            if "input" not in body:
-                result.errors.append(
-                    f"Line {line_number}: Embeddings API requires 'input' in body"
-                )
-                result.is_valid = False
+        elif endpoint == "/v1/embeddings" and "input" not in body:
+            result.errors.append(f"Line {line_number}: Embeddings API requires 'input' in body")
+            result.is_valid = False
 
 
 def validate_batch_file(
-    file_path: Union[str, Path],
+    file_path: str | Path,
     strict: bool = True,
     check_custom_id_uniqueness: bool = True,
-    allow_mixed_endpoints: bool = False
+    allow_mixed_endpoints: bool = False,
 ) -> ValidationResult:
     """
     Validate a batch file (convenience function).
@@ -325,12 +302,12 @@ def validate_batch_file(
         check_custom_id_uniqueness=check_custom_id_uniqueness,
         check_file_size=strict,
         check_request_count=strict,
-        allow_mixed_endpoints=allow_mixed_endpoints
+        allow_mixed_endpoints=allow_mixed_endpoints,
     )
     return validator.validate_file(file_path)
 
 
-def quick_validate(file_path: Union[str, Path]) -> bool:
+def quick_validate(file_path: str | Path) -> bool:
     """
     Quick validation check (returns True/False).
 

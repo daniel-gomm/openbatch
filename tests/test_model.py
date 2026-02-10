@@ -1,19 +1,19 @@
-import pytest
 from pydantic import BaseModel, Field
+
 from openbatch.model import (
-    Message,
-    PromptTemplate,
-    ReusablePrompt,
-    ReasoningConfig,
-    PromptTemplateInputInstance,
-    MessagesInputInstance,
-    EmbeddingInputInstance,
-    ResponsesRequest,
-    ChatCompletionsRequest,
-    EmbeddingsRequest,
-    ResponsesAPIStrategy,
     ChatCompletionsAPIStrategy,
+    ChatCompletionsRequest,
+    EmbeddingInputInstance,
     EmbeddingsAPIStrategy,
+    EmbeddingsRequest,
+    Message,
+    MessagesInputInstance,
+    PromptTemplate,
+    PromptTemplateInputInstance,
+    ReasoningConfig,
+    ResponsesAPIStrategy,
+    ResponsesRequest,
+    ReusablePrompt,
 )
 
 
@@ -231,9 +231,7 @@ class TestEmbeddingsRequest:
         assert request.input == "Hello"
 
     def test_embeddings_request_with_list(self):
-        request = EmbeddingsRequest(
-            model="text-embedding-3-small", input=["Hello", "World"]
-        )
+        request = EmbeddingsRequest(model="text-embedding-3-small", input=["Hello", "World"])
         assert isinstance(request.input, list)
         assert len(request.input) == 2
 
@@ -243,15 +241,11 @@ class TestEmbeddingsRequest:
         assert request.input == "New text"
 
     def test_embeddings_request_with_dimensions(self):
-        request = EmbeddingsRequest(
-            model="text-embedding-3-small", input="test", dimensions=512
-        )
+        request = EmbeddingsRequest(model="text-embedding-3-small", input="test", dimensions=512)
         assert request.dimensions == 512
 
     def test_embeddings_request_to_dict(self):
-        request = EmbeddingsRequest(
-            model="text-embedding-3-small", input="test", dimensions=256
-        )
+        request = EmbeddingsRequest(model="text-embedding-3-small", input="test", dimensions=256)
         result = request.to_dict()
         assert result["model"] == "text-embedding-3-small"
         assert result["input"] == "test"
